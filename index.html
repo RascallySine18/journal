@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Liquid Glass Journal</title>
+    <title>Liquid Journal Pro</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
@@ -12,43 +12,51 @@
         <section id="screen-journal" class="screen active">
             <header class="glass-header">
                 <div class="select-wrapper">
-                    <select id="subjectSelect" class="glass-input" onchange="switchSubject(this.value)">
-                        <option value="" disabled selected>Выберите предмет</option>
-                    </select>
+                    <select id="subjectSelect" class="glass-input" onchange="switchSubject(this.value)"></select>
                 </div>
-                <button class="glass-btn-icon" onclick="addSubject()" title="Добавить предмет">+</button>
+                <button class="glass-btn-icon" onclick="addSubject()">+</button>
             </header>
 
-            <div id="journalContent" class="journal-list">
-                </div>
+            <div id="journalContent" class="journal-list"></div>
             
-            <button class="floating-add-btn" onclick="addStudent()">+ Добавить ученика</button>
+            <button class="floating-add-btn" onclick="addNewStudentGlobal()">+ Добавить ученика</button>
         </section>
 
         <section id="screen-stats" class="screen">
-            <h2 class="page-title">Общая успеваемость</h2>
+            <h2 class="page-title">Успеваемость</h2>
             <div id="statsContent" class="stats-grid"></div>
         </section>
 
         <nav class="bottom-nav glass">
             <div class="nav-item active" onclick="showScreen('journal', this)">
-                <span class="nav-icon">📖</span>
-                <span>Журнал</span>
+                <span class="nav-icon">📖</span><span>Журнал</span>
             </div>
             <div class="nav-item" onclick="showScreen('stats', this)">
-                <span class="nav-icon">📊</span>
-                <span>Сводка</span>
+                <span class="nav-icon">📊</span><span>Сводка</span>
             </div>
         </nav>
     </div>
 
-    <div id="modal" class="modal" onclick="closeModal()">
+    <div id="studentModal" class="modal" onclick="closeStudentModal()">
         <div class="modal-content glass" onclick="event.stopPropagation()">
-            <div class="modal-badge" id="m-grade">5</div>
-            <h3 id="m-comment">Тема задания</h3>
+            <h2 id="ms-name">Имя Ученика</h2>
+            <p id="ms-subject" style="opacity: 0.6; margin-top: -10px;"></p>
             <div class="glass-hr"></div>
-            <p id="m-date" style="opacity: 0.7; font-size: 0.9rem;"></p>
-            <button class="glass-btn-full" onclick="closeModal()">Закрыть</button>
+            
+            <div id="ms-grades-grid" class="grades-grid-vertical">
+                </div>
+
+            <button class="add-grade-large" onclick="triggerAddGrade()">+ Поставить оценку</button>
+            <button class="glass-btn-full" onclick="closeStudentModal()" style="margin-top:10px">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="gradeModal" class="modal" onclick="closeGradeModal()">
+        <div class="modal-content glass" onclick="event.stopPropagation()">
+            <div class="modal-badge" id="mg-val">5</div>
+            <h3 id="mg-comment">Тема</h3>
+            <p id="mg-date" style="opacity:0.7"></p>
+            <button class="glass-btn-full" onclick="closeGradeModal()">Назад</button>
         </div>
     </div>
 
