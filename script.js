@@ -1,36 +1,41 @@
-let state = JSON.parse(localStorage.getItem('journal_v4')) || { subjects: [], globalStudents: [] };
+// Инициализация базы данных
+let db = JSON.parse(localStorage.getItem('journal_db_v5')) || {
+    subjects: [], // Список названий предметов
+    students: [], // Глобальный список учеников ["Иванов", "Петров"]
+    grades: {}    // Оценки в формате { "Предмет": { "Ученик": [ {val, comment, date} ] } }
+};
+
 let currentSubject = "";
-let selectedStudentName = "";
+let selectedStudent = "";
 
 function save() {
-    localStorage.setItem('journal_v4', JSON.stringify(state));
+    localStorage.setItem('journal_db_v5', JSON.stringify(db));
     render();
 }
 
-function showScreen(screenId, el) {
+function showScreen(id, el) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(`screen-${screenId}`).classList.add('active');
+    document.getElementById(`screen-${id}`).classList.add('active');
     el.classList.add('active');
     render();
 }
 
+// Управление данными
 function addSubject() {
     const name = prompt("Название предмета:");
-    if (name) {
-        // При добавлении предмета, он просто создается. Ученики подтянутся из globalStudents при рендере.
-        if (!state.subjects.find(s => s.name === name)) {
-            state.subjects.push({ name, gradesData: {} }); // gradesData хранит оценки: { "Иван Иванов": [...] }
-            currentSubject = name;
-            save();
-        }
+    if (name && !db.subjects.includes(name)) {
+        db.subjects.push(name);
+        db.grades[name] = {};
+        currentSubject = name;
+        save();
     }
 }
 
-function addNewStudentGlobal() {
-    const name = prompt("Имя и Фамилия ученика:");
-    if (name && !state.globalStudents.includes(name)) {
-        state.globalStudents.push(name);
+function addGlobalStudent() {
+    const name = prompt("Фамилия и Имя ученика:");
+    if (name && !db.students.includes(name)) {
+        db.students.push(name);
         save();
     }
 }
@@ -40,50 +45,46 @@ function switchSubject(val) {
     render();
 }
 
-// Работа с модальным окном ученика
+// Модалка ученика
 function openStudentCard(name) {
-    selectedStudentName = name;
-    const subj = state.subjects.find(s => s.name === currentSubject);
-    const grades = (subj.gradesData[name] || []);
-    
+    selectedStudent = name;
     document.getElementById('ms-name').innerText = name;
     document.getElementById('ms-subject').innerText = currentSubject;
     
+    const gradesList = (db.grades[currentSubject] && db.grades[currentSubject][name]) || [];
     const grid = document.getElementById('ms-grades-grid');
-    grid.innerHTML = grades.map((g, idx) => `
+    
+    grid.innerHTML = gradesList.map((g, idx) => `
         <div class="grade-item" style="background:${getGradeColor(g.val)}" 
-             onclick="openGradeDetails(${idx})">${g.val}</div>
+             onclick="showGradeDetail(${idx})">${g.val}</div>
     `).join('');
     
     document.getElementById('studentModal').style.display = 'flex';
 }
 
-function triggerAddGrade() {
-    const val = prompt("Оценка (2-5):");
+function openAddGradePrompt() {
+    const val = prompt("Введите оценку (2-5):");
     if (val >= 2 && val <= 5) {
-        const comment = prompt("За что?");
-        const subj = state.subjects.find(s => s.name === currentSubject);
-        if (!subj.gradesData[selectedStudentName]) subj.gradesData[selectedStudentName] = [];
+        const comment = prompt("За что оценка?");
+        if (!db.grades[currentSubject]) db.grades[currentSubject] = {};
+        if (!db.grades[currentSubject][selectedStudent]) db.grades[currentSubject][selectedStudent] = [];
         
-        subj.gradesData[selectedStudentName].push({
+        db.grades[currentSubject][selectedStudent].push({
             val: parseInt(val),
             comment: comment || "Работа на уроке",
             date: new Date().toLocaleDateString('ru-RU')
         });
         save();
-        openStudentCard(selectedStudentName); // Обновляем окно
+        openStudentCard(selectedStudent); // Перерисовать список оценок
     }
 }
 
-function openGradeDetails(idx) {
-    const subj = state.subjects.find(s => s.name === currentSubject);
-    const grade = subj.gradesData[selectedStudentName][idx];
-    
+function showGradeDetail(idx) {
+    const grade = db.grades[currentSubject][selectedStudent][idx];
     document.getElementById('mg-val').innerText = grade.val;
     document.getElementById('mg-val').style.background = getGradeColor(grade.val);
     document.getElementById('mg-comment').innerText = grade.comment;
     document.getElementById('mg-date').innerText = `Дата: ${grade.date}`;
-    
     document.getElementById('gradeModal').style.display = 'flex';
 }
 
@@ -99,51 +100,50 @@ function getGradeColor(v) {
 }
 
 function render() {
+    // Рендер выбора предмета
     const select = document.getElementById('subjectSelect');
     select.innerHTML = '<option value="" disabled ' + (currentSubject ? '' : 'selected') + '>Выберите предмет</option>' + 
-        state.subjects.map(s => `<option value="${s.name}" ${s.name === currentSubject ? 'selected' : ''}>${s.name}</option>`).join('');
+        db.subjects.map(s => `<option value="${s}" ${s === currentSubject ? 'selected' : ''}>${s}</option>`).join('');
 
     const content = document.getElementById('journalContent');
-    const subj = state.subjects.find(s => s.name === currentSubject);
-    
-    if (!subj) {
-        content.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px;">Выберите предмет</p>';
+    if (!currentSubject) {
+        content.innerHTML = '<div style="text-align:center; opacity:0.4; margin-top:50px;">Выберите предмет</div>';
     } else {
-        content.innerHTML = state.globalStudents.map(name => {
-            const grades = subj.gradesData[name] || [];
+        // Рендер списка учеников
+        content.innerHTML = db.students.map(name => {
+            const grades = (db.grades[currentSubject] && db.grades[currentSubject][name]) || [];
             const avg = grades.length ? (grades.reduce((a,b) => a+b.val, 0)/grades.length).toFixed(1) : "-";
             return `
                 <div class="student-card" onclick="openStudentCard('${name}')">
-                    <div class="name-info">
-                        <div style="font-size:1.1rem; font-weight:800">${name.split(' ')[0]}</div>
-                        <div style="opacity:0.6; font-size:0.8rem">${name.split(' ')[1] || ''}</div>
-                    </div>
+                    <div style="font-weight:600">${name}</div>
                     <div class="avg-badge" style="background:${getGradeColor(avg)}">${avg}</div>
                 </div>
             `;
         }).join('');
     }
 
-    // Сводка
+    // Рендер сводки
     const stats = document.getElementById('statsContent');
-    stats.innerHTML = state.globalStudents.map(name => {
-        let totalSum = 0, totalCount = 0;
-        let rows = state.subjects.map(s => {
-            const g = s.gradesData[name] || [];
+    stats.innerHTML = db.students.map(name => {
+        let totalSum = 0, count = 0;
+        const subjsHtml = db.subjects.map(s => {
+            const g = (db.grades[s] && db.grades[s][name]) || [];
             if (!g.length) return '';
-            const a = g.reduce((acc,curr) => acc+curr.val, 0) / g.length;
-            totalSum += a; totalCount++;
-            return `<div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:5px;">
-                        <span>${s.name}</span><b>${a.toFixed(1)}</b>
+            const a = g.reduce((acc, v) => acc + v.val, 0) / g.length;
+            totalSum += a; count++;
+            return `<div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-top:5px;opacity:0.8">
+                        <span>${s}</span><b>${a.toFixed(1)}</b>
                     </div>`;
         }).join('');
-        const totalAvg = totalCount ? (totalSum / totalCount).toFixed(2) : "-";
-        return `<div class="student-card" style="flex-direction:column; align-items:stretch;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>${name}</b> <span style="color:${getGradeColor(totalAvg)}">${totalAvg}</span>
-                    </div>
-                    ${rows}
-                </div>`;
+        const finalAvg = count ? (totalSum / count).toFixed(2) : "-";
+        return `
+            <div class="student-card" style="flex-direction:column; align-items:stretch">
+                <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1.1rem">
+                    <span>${name}</span><span style="color:${getGradeColor(finalAvg)}">${finalAvg}</span>
+                </div>
+                ${subjsHtml}
+            </div>
+        `;
     }).join('');
 }
 
