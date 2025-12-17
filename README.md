@@ -28,7 +28,7 @@
 
 1. **Склонируйте репозиторий**:
 ```
-git clone https://github.com/ваш-логин/liquid-journal.git
+git clone https://github.com/RascallySine18/journal.git
 
 ```
 
