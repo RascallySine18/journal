@@ -1,136 +1,75 @@
 :root {
     --bg: #0f172a;
-    --glass: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-heavy: rgba(255, 255, 255, 0.15);
     --accent: #38bdf8;
-    --white: #ffffff;
-    /* Цвета оценок */
-    --g5: #2ecc71;
-    --g4: #a2dd4e;
-    --g3: #f39c12;
-    --g2: #e74c3c;
+    --g5: #2ecc71; --g4: #a2dd4e; --g3: #f39c12; --g2: #e74c3c;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
 body {
-    margin: 0; font-family: 'Inter', sans-serif;
+    margin: 0; font-family: 'Inter', sans-serif; color: white;
     background: radial-gradient(circle at 50% 0%, #1e293b, #0f172a);
-    color: var(--white); height: 100vh; overflow: hidden;
+    height: 100vh; overflow: hidden;
 }
 
 .app-wrapper { height: 100%; display: flex; flex-direction: column; }
+.screen { display: none; padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 110px; }
+.screen.active { display: block; animation: fadeIn 0.3s; }
 
-.screen { 
-    display: none; padding: 20px; flex: 1; overflow-y: auto; 
-    padding-bottom: 120px; animation: fadeIn 0.3s ease;
+.glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+
+/* Карточка ученика в списке */
+.student-card {
+    background: var(--glass); border-radius: 18px; padding: 20px;
+    margin-bottom: 12px; display: flex; justify-content: space-between;
+    align-items: center; border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer; transition: 0.2s;
 }
-.screen.active { display: block; }
+.student-card:active { transform: scale(0.98); background: var(--glass-heavy); }
 
-.glass {
-    background: var(--glass);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-}
-
-/* Шапка */
-.glass-header { display: flex; gap: 10px; margin-bottom: 25px; }
-.select-wrapper { flex: 1; }
-
-.glass-input {
-    width: 100%; background: var(--glass); border: 1px solid var(--glass-border);
-    border-radius: 14px; color: white; padding: 12px; outline: none; font-size: 16px;
-}
-
-.glass-btn-icon {
-    width: 48px; height: 48px; border-radius: 14px; border: 1px solid var(--glass-border);
-    background: var(--accent); color: white; font-size: 24px; cursor: pointer;
-}
-
-/* Карточка ученика */
-.student-row {
-    background: var(--glass); border-radius: 20px;
-    padding: 12px 15px; margin-bottom: 12px;
-    display: flex; align-items: center; gap: 12px;
-    border: 1px solid var(--glass-border);
-}
-
-.name-info {
-    font-weight: 600; font-size: 0.9rem; min-width: 90px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-/* Контейнер оценок (МЭШ стиль) */
-.grades-wrapper {
-    display: flex; align-items: center; background: rgba(0,0,0,0.2);
-    border-radius: 12px; padding: 4px; overflow: hidden; flex: 1;
-}
-
-.grades-scroll {
-    display: flex; gap: 6px; overflow-x: auto; padding-right: 8px;
-    scrollbar-width: none; flex: 1;
-}
-.grades-scroll::-webkit-scrollbar { display: none; }
-
-.grade-badge {
-    min-width: 34px; height: 34px; border-radius: 10px;
+.avg-badge {
+    width: 45px; height: 45px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 0.9rem; flex-shrink: 0; cursor: pointer;
+    font-weight: 800; font-size: 1.1rem;
 }
 
-.add-grade-btn {
-    min-width: 34px; height: 34px; border-radius: 10px;
-    background: var(--glass-border); color: white;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold; cursor: pointer; flex-shrink: 0;
+/* Сетка оценок в модалке */
+.grades-grid-vertical {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    max-height: 300px; overflow-y: auto; padding: 10px 0;
 }
 
-.avg-box {
-    width: 40px; text-align: center; font-weight: 800; font-size: 1rem;
+.grade-item {
+    aspect-ratio: 1/1; border-radius: 10px; display: flex;
+    align-items: center; justify-content: center; font-weight: 800;
 }
 
-/* Плавающая кнопка */
+.add-grade-large {
+    width: 100%; padding: 15px; border-radius: 15px; border: none;
+    background: var(--accent); color: white; font-weight: bold;
+    margin-top: 15px; cursor: pointer;
+}
+
+/* Остальные UI элементы */
+.glass-header { display: flex; gap: 10px; margin-bottom: 20px; }
+.glass-input { flex: 1; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; padding: 12px; }
+.glass-btn-icon { width: 48px; background: var(--accent); border: none; border-radius: 12px; color: white; font-size: 20px; }
+
 .floating-add-btn {
-    position: fixed; bottom: 100px; right: 20px;
-    background: var(--accent); color: white; border: none;
-    padding: 15px 25px; border-radius: 50px; font-weight: bold;
-    box-shadow: 0 10px 20px rgba(56, 189, 248, 0.4);
+    position: fixed; bottom: 100px; right: 20px; padding: 15px 25px;
+    background: var(--accent); border-radius: 30px; border: none; color: white; font-weight: bold;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
-/* Нижняя навигация */
-.bottom-nav {
-    position: fixed; bottom: 20px; left: 20px; right: 20px;
-    height: 70px; border-radius: 22px;
-    display: flex; justify-content: space-around; align-items: center;
-}
-.nav-item { 
-    display: flex; flex-direction: column; align-items: center; 
-    opacity: 0.5; font-size: 0.75rem; transition: 0.3s;
-}
-.nav-item.active { opacity: 1; color: var(--accent); transform: translateY(-5px); }
-.nav-icon { font-size: 1.5rem; margin-bottom: 4px; }
+.bottom-nav { position: fixed; bottom: 20px; left: 20px; right: 20px; height: 70px; border-radius: 20px; display: flex; justify-content: space-around; align-items: center; }
+.nav-item { opacity: 0.5; text-align: center; font-size: 0.8rem; }
+.nav-item.active { opacity: 1; color: var(--accent); }
+.nav-icon { display: block; font-size: 1.4rem; }
 
-/* Модалка */
-.modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000;
-}
-.modal-content {
-    width: 85%; max-width: 340px; padding: 30px; border-radius: 28px; text-align: center;
-}
-.modal-badge {
-    width: 60px; height: 60px; border-radius: 15px; margin: 0 auto 20px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; font-weight: 900; color: white;
-}
-.glass-hr { height: 1px; background: var(--glass-border); margin: 20px 0; border: none; }
-.glass-btn-full {
-    width: 100%; padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border);
-    background: var(--glass); color: white; font-weight: bold; cursor: pointer;
-}
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { width: 90%; max-width: 360px; padding: 25px; border-radius: 25px; }
+.modal-badge { width: 60px; height: 60px; border-radius: 15px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; }
+.glass-hr { height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0; border: none; }
+.glass-btn-full { width: 100%; padding: 12px; border-radius: 12px; background: var(--glass-heavy); color: white; border: 1px solid rgba(255,255,255,0.1); }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Сводка */
-.stats-card { background: var(--glass); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--glass-border); }
-.subj-row { display: flex; justify-content: space-between; margin-top: 10px; opacity: 0.8; font-size: 0.9rem; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
