@@ -1,13 +1,12 @@
-let state = JSON.parse(localStorage.getItem('journal_v3')) || { subjects: [] };
+let state = JSON.parse(localStorage.getItem('journal_v4')) || { subjects: [], globalStudents: [] };
 let currentSubject = "";
+let selectedStudentName = "";
 
-// Сохранение и обновление интерфейса
 function save() {
-    localStorage.setItem('journal_v3', JSON.stringify(state));
+    localStorage.setItem('journal_v4', JSON.stringify(state));
     render();
 }
 
-// Переключение экранов
 function showScreen(screenId, el) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -16,12 +15,22 @@ function showScreen(screenId, el) {
     render();
 }
 
-// Управление предметами
 function addSubject() {
-    const name = prompt("Название предмета (например, Математика):");
+    const name = prompt("Название предмета:");
     if (name) {
-        state.subjects.push({ name, students: [] });
-        currentSubject = name;
+        // При добавлении предмета, он просто создается. Ученики подтянутся из globalStudents при рендере.
+        if (!state.subjects.find(s => s.name === name)) {
+            state.subjects.push({ name, gradesData: {} }); // gradesData хранит оценки: { "Иван Иванов": [...] }
+            currentSubject = name;
+            save();
+        }
+    }
+}
+
+function addNewStudentGlobal() {
+    const name = prompt("Имя и Фамилия ученика:");
+    if (name && !state.globalStudents.includes(name)) {
+        state.globalStudents.push(name);
         save();
     }
 }
@@ -31,126 +40,111 @@ function switchSubject(val) {
     render();
 }
 
-// Управление учениками
-function addStudent() {
-    if (!currentSubject) return alert("Сначала выберите или создайте предмет!");
-    const name = prompt("Имя и фамилия ученика:");
-    if (name) {
-        const subj = state.subjects.find(s => s.name === currentSubject);
-        subj.students.push({ name, grades: [] });
-        save();
-    }
+// Работа с модальным окном ученика
+function openStudentCard(name) {
+    selectedStudentName = name;
+    const subj = state.subjects.find(s => s.name === currentSubject);
+    const grades = (subj.gradesData[name] || []);
+    
+    document.getElementById('ms-name').innerText = name;
+    document.getElementById('ms-subject').innerText = currentSubject;
+    
+    const grid = document.getElementById('ms-grades-grid');
+    grid.innerHTML = grades.map((g, idx) => `
+        <div class="grade-item" style="background:${getGradeColor(g.val)}" 
+             onclick="openGradeDetails(${idx})">${g.val}</div>
+    `).join('');
+    
+    document.getElementById('studentModal').style.display = 'flex';
 }
 
-// Управление оценками
-function addGrade(stuName) {
-    const val = prompt("Введите оценку (2-5):");
+function triggerAddGrade() {
+    const val = prompt("Оценка (2-5):");
     if (val >= 2 && val <= 5) {
-        const comment = prompt("За какое задание? (н-р: Контрольная работа)");
+        const comment = prompt("За что?");
         const subj = state.subjects.find(s => s.name === currentSubject);
-        const stu = subj.students.find(s => s.name === stuName);
-        stu.grades.push({
+        if (!subj.gradesData[selectedStudentName]) subj.gradesData[selectedStudentName] = [];
+        
+        subj.gradesData[selectedStudentName].push({
             val: parseInt(val),
-            comment: comment || "Работа в классе",
-            date: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+            comment: comment || "Работа на уроке",
+            date: new Date().toLocaleDateString('ru-RU')
         });
         save();
+        openStudentCard(selectedStudentName); // Обновляем окно
     }
 }
 
-// Детали оценки (Модалка)
-function openDetails(val, comment, date) {
-    const modal = document.getElementById('modal');
-    const mGrade = document.getElementById('m-grade');
-    mGrade.innerText = val;
-    mGrade.style.background = getGradeColor(val);
-    document.getElementById('m-comment').innerText = comment;
-    document.getElementById('m-date').innerText = `Выставлено: ${date}`;
-    modal.style.display = 'flex';
+function openGradeDetails(idx) {
+    const subj = state.subjects.find(s => s.name === currentSubject);
+    const grade = subj.gradesData[selectedStudentName][idx];
+    
+    document.getElementById('mg-val').innerText = grade.val;
+    document.getElementById('mg-val').style.background = getGradeColor(grade.val);
+    document.getElementById('mg-comment').innerText = grade.comment;
+    document.getElementById('mg-date').innerText = `Дата: ${grade.date}`;
+    
+    document.getElementById('gradeModal').style.display = 'flex';
 }
 
-function closeModal() {
-    document.getElementById('modal').style.display = 'none';
-}
+function closeStudentModal() { document.getElementById('studentModal').style.display = 'none'; }
+function closeGradeModal() { document.getElementById('gradeModal').style.display = 'none'; }
 
-// Вспомогательные функции
 function getGradeColor(v) {
     if (v >= 4.5) return 'var(--g5)';
     if (v >= 3.5) return 'var(--g4)';
     if (v >= 2.5) return 'var(--g3)';
     if (v > 0) return 'var(--g2)';
-    return 'transparent';
+    return 'rgba(255,255,255,0.1)';
 }
 
 function render() {
-    // 1. Селект предметов
     const select = document.getElementById('subjectSelect');
     select.innerHTML = '<option value="" disabled ' + (currentSubject ? '' : 'selected') + '>Выберите предмет</option>' + 
         state.subjects.map(s => `<option value="${s.name}" ${s.name === currentSubject ? 'selected' : ''}>${s.name}</option>`).join('');
 
-    // 2. Список учеников в журнале
     const content = document.getElementById('journalContent');
-    const activeSubj = state.subjects.find(s => s.name === currentSubject);
+    const subj = state.subjects.find(s => s.name === currentSubject);
     
-    if (!activeSubj) {
-        content.innerHTML = '<div style="text-align:center; opacity:0.4; margin-top:60px;">Создайте предмет, чтобы начать</div>';
+    if (!subj) {
+        content.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:50px;">Выберите предмет</p>';
     } else {
-        content.innerHTML = activeSubj.students.map(stu => {
-            const sum = stu.grades.reduce((a, b) => a + b.val, 0);
-            const avg = stu.grades.length ? (sum / stu.grades.length).toFixed(1) : "-";
+        content.innerHTML = state.globalStudents.map(name => {
+            const grades = subj.gradesData[name] || [];
+            const avg = grades.length ? (grades.reduce((a,b) => a+b.val, 0)/grades.length).toFixed(1) : "-";
             return `
-                <div class="student-row">
-                    <div class="name-info">${stu.name}</div>
-                    <div class="grades-wrapper">
-                        <div class="grades-scroll">
-                            ${stu.grades.map(g => `
-                                <div class="grade-badge" style="background:${getGradeColor(g.val)}" 
-                                     onclick="openDetails(${g.val}, '${g.comment}', '${g.date}')">
-                                     ${g.val}
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="add-grade-btn" onclick="addGrade('${stu.name}')">+</div>
+                <div class="student-card" onclick="openStudentCard('${name}')">
+                    <div class="name-info">
+                        <div style="font-size:1.1rem; font-weight:800">${name.split(' ')[0]}</div>
+                        <div style="opacity:0.6; font-size:0.8rem">${name.split(' ')[1] || ''}</div>
                     </div>
-                    <div class="avg-box" style="color:${getGradeColor(avg)}">${avg}</div>
+                    <div class="avg-badge" style="background:${getGradeColor(avg)}">${avg}</div>
                 </div>
             `;
         }).join('');
     }
 
-    // 3. Сводка (Статистика)
-    const statsContent = document.getElementById('statsContent');
-    const studentStats = {};
-
-    state.subjects.forEach(subj => {
-        subj.students.forEach(stu => {
-            if (!studentStats[stu.name]) studentStats[stu.name] = [];
-            if (stu.grades.length) {
-                const avg = stu.grades.reduce((a,b) => a+b.val,0) / stu.grades.length;
-                studentStats[stu.name].push({ subject: subj.name, avg: avg });
-            }
-        });
-    });
-
-    statsContent.innerHTML = Object.entries(studentStats).map(([name, subjs]) => {
-        const totalAvg = (subjs.reduce((a,b) => a+b.avg, 0) / subjs.length).toFixed(2);
-        return `
-            <div class="stats-card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 style="margin:0">${name}</h3>
-                    <span style="font-size:1.2rem; font-weight:800; color:${getGradeColor(totalAvg)}">${totalAvg}</span>
-                </div>
-                <div class="glass-hr" style="margin:10px 0"></div>
-                ${subjs.map(s => `
-                    <div class="subj-row">
-                        <span>${s.subject}</span>
-                        <span style="font-weight:bold">${s.avg.toFixed(1)}</span>
+    // Сводка
+    const stats = document.getElementById('statsContent');
+    stats.innerHTML = state.globalStudents.map(name => {
+        let totalSum = 0, totalCount = 0;
+        let rows = state.subjects.map(s => {
+            const g = s.gradesData[name] || [];
+            if (!g.length) return '';
+            const a = g.reduce((acc,curr) => acc+curr.val, 0) / g.length;
+            totalSum += a; totalCount++;
+            return `<div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:5px;">
+                        <span>${s.name}</span><b>${a.toFixed(1)}</b>
+                    </div>`;
+        }).join('');
+        const totalAvg = totalCount ? (totalSum / totalCount).toFixed(2) : "-";
+        return `<div class="student-card" style="flex-direction:column; align-items:stretch;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b>${name}</b> <span style="color:${getGradeColor(totalAvg)}">${totalAvg}</span>
                     </div>
-                `).join('')}
-            </div>
-        `;
+                    ${rows}
+                </div>`;
     }).join('');
 }
 
-// Старт
 render();
