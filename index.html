@@ -2,47 +2,41 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Journal Glass</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Glass Journal Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar glass">
-            <h2>Предметы</h2>
-            <div id="subjectsList"></div>
-            <button class="add-btn" onclick="addSubject()">+ Новый предмет</button>
-        </aside>
-
-        <main class="main-content glass">
-            <header id="subjectHeader">
-                <h1 id="currentSubjectName">Выберите предмет</h1>
-                <div id="subjectActions" style="display:none;">
-                    <button class="add-btn" onclick="addStudent()">+ Ученик</button>
-                </div>
+    <div class="app-wrapper">
+        <section id="screen-journal" class="screen active">
+            <header class="glass-header">
+                <select id="subjectSelect" class="glass-input" onchange="switchSubject(this.value)">
+                    <option value="" disabled selected>Выберите предмет</option>
+                </select>
+                <button class="glass-btn plus" onclick="addSubject()">+ Предмет</button>
             </header>
 
-            <div class="table-container">
-                <table id="journalTable">
-                    <thead>
-                        <tr>
-                            <th>Ученик</th>
-                            <th>Оценки (нажми для деталей)</th>
-                            <th>Средний</th>
-                        </tr>
-                    </thead>
-                    <tbody id="journalBody"></tbody>
-                </table>
-            </div>
-        </main>
+            <div id="journalContent" class="journal-grid">
+                </div>
+            
+            <button class="glass-btn floating" onclick="addStudent()">+ Ученик</button>
+        </section>
+
+        <section id="screen-stats" class="screen">
+            <h2 class="page-title">Успеваемость (Все предметы)</h2>
+            <div id="statsContent" class="stats-grid"></div>
+        </section>
+
+        <nav class="bottom-nav glass">
+            <div class="nav-item active" onclick="showScreen('journal')">📖 Журнал</div>
+            <div class="nav-item" onclick="showScreen('stats')">📊 Сводка</div>
+        </nav>
     </div>
 
     <div id="modal" class="modal" onclick="closeModal()">
         <div class="modal-content glass" onclick="event.stopPropagation()">
-            <h3 id="modalTitle">Детали оценки</h3>
-            <p id="modalDate"></p>
-            <p id="modalComment"></p>
-            <button onclick="closeModal()">Закрыть</button>
+            <div id="modalBody"></div>
+            <button class="glass-btn" onclick="closeModal()">Закрыть</button>
         </div>
     </div>
 
