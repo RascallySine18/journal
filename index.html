@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Liquid Glass Journal Pro</title>
+    <title>Liquid Journal Pro Max</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
@@ -11,21 +11,20 @@
     <div class="app-wrapper">
         <section id="screen-journal" class="screen active">
             <header class="glass-header">
-                <select id="subjectSelect" class="glass-input" onchange="switchSubject(this.value)">
-                    <option value="" disabled selected>Выберите предмет</option>
-                </select>
+                <select id="subjectSelect" class="glass-input" onchange="switchSubject(this.value)"></select>
                 <button class="glass-btn-icon" onclick="addSubject()">+</button>
             </header>
-
-            <div id="journalContent" class="journal-list">
-                </div>
-            
+            <div id="journalContent" class="journal-list"></div>
             <button class="floating-add-btn" onclick="addGlobalStudent()">+ Добавить ученика</button>
         </section>
 
         <section id="screen-stats" class="screen">
-            <h2 class="page-title">Итоговые оценки</h2>
+            <h2 class="page-title">Успеваемость</h2>
             <div id="statsContent" class="stats-grid"></div>
+            <div style="margin-top: 30px; display: flex; gap: 10px;">
+                <button class="glass-btn-close" onclick="exportData()" style="background: rgba(46, 204, 113, 0.2);">Сохранить файл</button>
+                <button class="glass-btn-close" onclick="clearAllData()" style="background: rgba(231, 76, 60, 0.2);">Очистить всё</button>
+            </div>
         </section>
 
         <nav class="bottom-nav glass">
@@ -36,23 +35,20 @@
 
     <div id="studentModal" class="modal" onclick="closeStudentModal()">
         <div class="modal-content glass" onclick="event.stopPropagation()">
-            <h2 id="ms-name">Имя Ученика</h2>
-            <p id="ms-subject" style="opacity: 0.6; margin-top: -10px; font-size: 0.9rem;"></p>
+            <h2 id="ms-name"></h2>
+            <p id="ms-subject" style="opacity: 0.6; margin-top: -10px;"></p>
             <div class="glass-hr"></div>
-            
-            <div id="ms-grades-grid" class="grades-vertical-grid">
-                </div>
-
+            <div id="ms-grades-grid" class="grades-vertical-grid"></div>
             <button class="add-grade-btn-large" onclick="openAddGradePrompt()">+ Поставить оценку</button>
             <button class="glass-btn-close" onclick="closeStudentModal()">Закрыть</button>
         </div>
     </div>
 
     <div id="gradeModal" class="modal" onclick="closeGradeModal()">
-        <div class="modal-content glass detail-modal" onclick="event.stopPropagation()">
-            <div class="modal-badge-large" id="mg-val">5</div>
-            <h3 id="mg-comment">Тема задания</h3>
-            <p id="mg-date" style="opacity: 0.7; font-size: 0.9rem;"></p>
+        <div class="modal-content glass" onclick="event.stopPropagation()">
+            <div class="modal-badge-large" id="mg-val"></div>
+            <h3 id="mg-comment"></h3>
+            <p id="mg-date" style="opacity: 0.7;"></p>
             <button class="glass-btn-close" onclick="closeGradeModal()">Назад</button>
         </div>
     </div>
