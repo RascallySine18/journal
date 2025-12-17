@@ -1,69 +1,96 @@
-let journalData = JSON.parse(localStorage.getItem('journal')) || [];
+let data = JSON.parse(localStorage.getItem('journal_v2')) || [];
+let currentSubjIndex = null;
 
-function addEntry() {
-    const student = document.getElementById('studentName').value;
-    const subject = document.getElementById('subjectName').value;
+function save() {
+    localStorage.setItem('journal_v2', JSON.stringify(data));
+    renderSubjects();
+    renderMain();
+}
 
-    if (student && subject) {
-        journalData.push({ student, subject, grades: [] });
-        saveAndRender();
-        document.getElementById('studentName').value = '';
-        document.getElementById('subjectName').value = '';
+function addSubject() {
+    const name = prompt("Название предмета:");
+    if (name) {
+        data.push({ name, students: [] });
+        save();
     }
 }
 
-function addGrade(index) {
-    const grade = prompt("Введите оценку (2-5):");
-    if (grade >= 2 && grade <= 5) {
-        journalData[index].grades.push(parseInt(grade));
-        saveAndRender();
+function addStudent() {
+    const name = prompt("Имя ученика:");
+    if (name) {
+        data[currentSubjIndex].students.push({ name, grades: [] });
+        save();
     }
 }
 
-function calculateAverage(grades) {
-    if (grades.length === 0) return 0;
-    const sum = grades.reduce((a, b) => a + b, 0);
-    return (sum / grades.length).toFixed(1);
+function addGrade(stuIndex) {
+    const val = prompt("Оценка (2-5):");
+    if (val >= 2 && val <= 5) {
+        const comment = prompt("За что оценка (н-р: Контрольная работа):");
+        const date = new Date().toLocaleDateString();
+        data[currentSubjIndex].students[stuIndex].grades.push({
+            val: parseInt(val),
+            comment: comment || "Без описания",
+            date: date
+        });
+        save();
+    }
 }
 
-function getGradeClass(avg) {
-    if (avg >= 4.5) return 'grade-5';
-    if (avg >= 3.5) return 'grade-4';
-    if (avg >= 2.5) return 'grade-3';
-    if (avg > 0) return 'grade-2';
-    return '';
+function showDetails(stuIdx, gradeIdx) {
+    const grade = data[currentSubjIndex].students[stuIdx].grades[gradeIdx];
+    document.getElementById('modalTitle').innerText = `Оценка: ${grade.val}`;
+    document.getElementById('modalDate').innerText = `Дата: ${grade.date}`;
+    document.getElementById('modalComment').innerText = `Задание: ${grade.comment}`;
+    document.getElementById('modal').style.display = 'flex';
 }
 
-function saveAndRender() {
-    localStorage.setItem('journal', JSON.stringify(journalData));
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+}
+
+function renderSubjects() {
+    const container = document.getElementById('subjectsList');
+    container.innerHTML = data.map((s, i) => `
+        <div class="subject-item ${i === currentSubjIndex ? 'active' : ''}" onclick="selectSubject(${i})">
+            ${s.name}
+        </div>
+    `).join('');
+}
+
+function selectSubject(index) {
+    currentSubjIndex = index;
+    document.getElementById('subjectActions').style.display = 'block';
+    save();
+}
+
+function renderMain() {
     const tbody = document.getElementById('journalBody');
-    tbody.innerHTML = '';
+    if (currentSubjIndex === null) {
+        tbody.innerHTML = '<tr><td colspan="3">Выберите предмет слева</td></tr>';
+        return;
+    }
 
-    journalData.forEach((item, index) => {
-        const avg = calculateAverage(item.grades);
-        const row = `
+    const subj = data[currentSubjIndex];
+    document.getElementById('currentSubjectName').innerText = subj.name;
+
+    tbody.innerHTML = subj.students.map((stu, sIdx) => {
+        const avg = stu.grades.length ? (stu.grades.reduce((a,b) => a + b.val, 0) / stu.grades.length).toFixed(1) : 0;
+        return `
             <tr>
-                <td data-label="Ученик">${item.student}</td>
-                <td data-label="Предмет">${item.subject}</td>
-                <td data-label="Оценки">
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end;">
-                        ${item.grades.map(g => `<span class="grade-badge grade-${g}">${g}</span>`).join('')}
-                        <button onclick="addGrade(${index})" style="width:35px; height:35px; padding:0">+</button>
-                    </div>
+                <td><b>${stu.name}</b></td>
+                <td>
+                    ${stu.grades.map((g, gIdx) => `
+                        <span class="grade-badge g-${g.val}" onclick="showDetails(${sIdx}, ${gIdx})">${g.val}</span>
+                    `).join('')}
+                    <button onclick="addGrade(${sIdx})">+</button>
                 </td>
-                <td data-label="Средний" class="avg-cell ${getGradeClass(avg)}">${avg > 0 ? avg : '-'}</td>
-                <td data-label="Действие">
-                    <button onclick="deleteEntry(${index})" style="background: rgba(255,0,0,0.3); width:35px; height:35px; padding:0">✕</button>
-                </td>
+                <td>${avg > 0 ? avg : '-'}</td>
             </tr>
         `;
-        tbody.innerHTML += row;
-    });
-}
-function deleteEntry(index) {
-    journalData.splice(index, 1);
-    saveAndRender();
+    }).join('');
 }
 
-
-saveAndRender();
+// Инициализация
+renderSubjects();
+renderMain();
