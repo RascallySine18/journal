@@ -43,23 +43,27 @@ function saveAndRender() {
         const avg = calculateAverage(item.grades);
         const row = `
             <tr>
-                <td>${item.student}</td>
-                <td>${item.subject}</td>
-                <td>
-                    ${item.grades.map(g => `<span class="grade-badge grade-${g}">${g}</span>`).join('')}
-                    <button onclick="addGrade(${index})" style="padding: 2px 8px; font-size: 12px;">+</button>
+                <td data-label="Ученик">${item.student}</td>
+                <td data-label="Предмет">${item.subject}</td>
+                <td data-label="Оценки">
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end;">
+                        ${item.grades.map(g => `<span class="grade-badge grade-${g}">${g}</span>`).join('')}
+                        <button onclick="addGrade(${index})" style="width:35px; height:35px; padding:0">+</button>
+                    </div>
                 </td>
-                <td class="avg-cell ${getGradeClass(avg)}">${avg > 0 ? avg : '-'}</td>
-                <td><button onclick="deleteEntry(${index})" style="background: rgba(231, 76, 60, 0.6)">✖</button></td>
+                <td data-label="Средний" class="avg-cell ${getGradeClass(avg)}">${avg > 0 ? avg : '-'}</td>
+                <td data-label="Действие">
+                    <button onclick="deleteEntry(${index})" style="background: rgba(255,0,0,0.3); width:35px; height:35px; padding:0">✕</button>
+                </td>
             </tr>
         `;
         tbody.innerHTML += row;
     });
 }
-
 function deleteEntry(index) {
     journalData.splice(index, 1);
     saveAndRender();
 }
+
 
 saveAndRender();
