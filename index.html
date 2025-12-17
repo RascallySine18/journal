@@ -3,36 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Journal</title>
+    <title>Pro Journal Glass</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="glass-container">
-        <header>
-            <h1>Электронный Журнал</h1>
-            <div class="controls">
-                <input type="text" id="studentName" placeholder="Имя ученика">
-                <input type="text" id="subjectName" placeholder="Предмет">
-                <button onclick="addEntry()">Добавить</button>
-            </div>
-        </header>
+    <div class="app-container">
+        <aside class="sidebar glass">
+            <h2>Предметы</h2>
+            <div id="subjectsList"></div>
+            <button class="add-btn" onclick="addSubject()">+ Новый предмет</button>
+        </aside>
 
-        <main>
-            <table id="journalTable">
-                <thead>
-                    <tr>
-                        <th>Ученик</th>
-                        <th>Предмет</th>
-                        <th>Оценки</th>
-                        <th>Средний балл</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="journalBody">
-                    </tbody>
-            </table>
+        <main class="main-content glass">
+            <header id="subjectHeader">
+                <h1 id="currentSubjectName">Выберите предмет</h1>
+                <div id="subjectActions" style="display:none;">
+                    <button class="add-btn" onclick="addStudent()">+ Ученик</button>
+                </div>
+            </header>
+
+            <div class="table-container">
+                <table id="journalTable">
+                    <thead>
+                        <tr>
+                            <th>Ученик</th>
+                            <th>Оценки (нажми для деталей)</th>
+                            <th>Средний</th>
+                        </tr>
+                    </thead>
+                    <tbody id="journalBody"></tbody>
+                </table>
+            </div>
         </main>
     </div>
+
+    <div id="modal" class="modal" onclick="closeModal()">
+        <div class="modal-content glass" onclick="event.stopPropagation()">
+            <h3 id="modalTitle">Детали оценки</h3>
+            <p id="modalDate"></p>
+            <p id="modalComment"></p>
+            <button onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
